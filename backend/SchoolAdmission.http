@@ -1,0 +1,22 @@
+@baseUrl = http://localhost:8080
+
+### Health
+GET {{baseUrl}}/health
+
+### Create a class
+POST {{baseUrl}}/classes
+Content-Type: application/json
+
+{ "name": "Class 6 - Morning Shift", "totalSeats": 120 }
+
+### Create a class - invalid (expect 400)
+POST {{baseUrl}}/classes
+Content-Type: application/json
+
+{ "name": "", "totalSeats": 0 }
+
+### List classes with seat breakdown
+GET {{baseUrl}}/classes
+
+### Get one class (replace the id)
+GET {{baseUrl}}/classes/00000000-0000-0000-0000-000000000000
