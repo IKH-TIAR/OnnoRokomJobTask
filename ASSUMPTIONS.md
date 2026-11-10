@@ -64,4 +64,5 @@ All errors use RFC 7807 Problem Details plus a machine-readable `code` (e.g. `CL
 | .NET version | .NET 10. | The brief allows .NET 8 or newer. |
 | Migrations | Applied automatically when the backend starts. | `docker compose up` must be enough. |
 | Persistence | Data lives in a named Docker volume and survives `docker compose down` / `up`. (`docker compose down -v` deletes it on purpose.) | §1.5. |
+| Ports | Frontend on `3000`, backend on `8080` (required by the brief). | 3000 differs from the Vite dev server (5173), so both can run side by side. |
 | PostgreSQL host port | Published on `5433`, not 5432. | Avoids a clash if a PostgreSQL is already installed on the reviewer's machine. Containers talk to each other on 5432 internally. |
