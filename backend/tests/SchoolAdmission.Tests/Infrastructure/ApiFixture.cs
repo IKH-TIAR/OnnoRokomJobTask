@@ -41,6 +41,16 @@ public sealed class ApiFixture : IAsyncLifetime
             {
                 Database = $"school_admission_test_{Guid.NewGuid():N}"
             };
+
+            // Create it up front; otherwise EF logs a scary "database does not exist" error
+            // before creating it itself during migration.
+            await using (var admin = new NpgsqlConnection(external))
+            {
+                await admin.OpenAsync();
+                await using var create = new NpgsqlCommand($"CREATE DATABASE \"{csb.Database}\"", admin);
+                await create.ExecuteNonQueryAsync();
+            }
+
             baseConnectionString = csb.ConnectionString;
             _dropDatabaseOnDispose = true;
         }
