@@ -1,6 +1,8 @@
 services:
   postgres:
     image: postgres:17-alpine
+    # Headroom for several API processes (each pools up to 40 connections) during admission rush
+    command: ["postgres", "-c", "max_connections=200"]
     environment:
       POSTGRES_DB: school_admission
       POSTGRES_USER: postgres

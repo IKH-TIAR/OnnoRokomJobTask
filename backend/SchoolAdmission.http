@@ -20,3 +20,13 @@ GET {{baseUrl}}/classes
 
 ### Get one class (replace the id)
 GET {{baseUrl}}/classes/00000000-0000-0000-0000-000000000000
+
+### Apply for a seat (replace the class id) - 201, or 409 if full / already applied
+POST {{baseUrl}}/classes/00000000-0000-0000-0000-000000000000/holds
+X-Student-Id: 20152691234567890
+
+### Apply without student id (expect 400)
+POST {{baseUrl}}/classes/00000000-0000-0000-0000-000000000000/holds
+
+### Get a hold (replace the hold id) - status becomes EXPIRED once expiresAt passes
+GET {{baseUrl}}/holds/00000000-0000-0000-0000-000000000000

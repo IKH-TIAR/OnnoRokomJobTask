@@ -3,6 +3,7 @@ using SchoolAdmission.Application.Classes;
 using SchoolAdmission.Application.Classes.Dtos;
 using SchoolAdmission.Application.Common.Exceptions;
 using SchoolAdmission.Domain.Entities;
+using SchoolAdmission.Domain.Enums;
 
 namespace SchoolAdmission.Infrastructure.Persistence.Services;
 
@@ -20,32 +21,47 @@ public class ClassService(AppDbContext dbContext, TimeProvider timeProvider) : I
 
     public async Task<IReadOnlyList<ClassSeatSummaryDto>> GetAllClassesAsync(CancellationToken cancellationToken = default)
     {
-        var classes = await dbContext.Classes
-            .AsNoTracking()
-            .OrderBy(c => c.CreatedAt)
-            .Select(c => new { c.Id, c.Name, c.TotalSeats })
+        var rows = await SeatCounts(dbContext.Classes.OrderBy(c => c.CreatedAt))
             .ToListAsync(cancellationToken);
 
-        return classes.Select(c => ToSeatSummary(c.Id, c.Name, c.TotalSeats)).ToList();
+        return rows.Select(ToDto).ToList();
     }
 
     public async Task<ClassSeatSummaryDto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var schoolClass = await dbContext.Classes
-            .AsNoTracking()
-            .Where(c => c.Id == id)
-            .Select(c => new { c.Id, c.Name, c.TotalSeats })
+        var row = await SeatCounts(dbContext.Classes.Where(c => c.Id == id))
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException("CLASS_NOT_FOUND", "The requested class does not exist.");
 
-        return ToSeatSummary(schoolClass.Id, schoolClass.Name, schoolClass.TotalSeats);
+        return ToDto(row);
     }
 
-    // Holds are not implemented yet. Once they are, held/confirmed will be counted from the
-    // holds table (active hold = HELD and expires_at in the future).
-    private static ClassSeatSummaryDto ToSeatSummary(Guid id, string name, int totalSeats)
+    /// <summary>
+    /// Seat counts computed in SQL. A HELD hold only occupies a seat until it expires, so
+    /// seats return to the pool the moment a hold's time runs out, even before the
+    /// background sweeper marks it EXPIRED.
+    /// </summary>
+    private IQueryable<SeatCountRow> SeatCounts(IQueryable<SchoolClass> classes)
     {
-        const int held = 0, confirmed = 0;
-        return new ClassSeatSummaryDto(id, name, totalSeats, held, confirmed, totalSeats - held - confirmed);
+        var now = timeProvider.GetUtcNow();
+
+        return classes
+            .AsNoTracking()
+            .Select(c => new SeatCountRow(
+                c.Id,
+                c.Name,
+                c.TotalSeats,
+                dbContext.Holds.Count(h => h.ClassId == c.Id && h.Status == HoldStatus.Held && h.ExpiresAt > now),
+                dbContext.Holds.Count(h => h.ClassId == c.Id && h.Status == HoldStatus.Confirmed)));
     }
+
+    private static ClassSeatSummaryDto ToDto(SeatCountRow r) => new(
+        r.Id,
+        r.Name,
+        r.TotalSeats,
+        r.HeldSeats,
+        r.ConfirmedSeats,
+        Math.Max(0, r.TotalSeats - r.HeldSeats - r.ConfirmedSeats));
+
+    private sealed record SeatCountRow(Guid Id, string Name, int TotalSeats, int HeldSeats, int ConfirmedSeats);
 }

@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SchoolAdmission.Application.Classes;
+using SchoolAdmission.Application.Holds;
 using SchoolAdmission.Endpoints;
 using SchoolAdmission.Infrastructure.Exceptions;
 using SchoolAdmission.Infrastructure.Persistence;
@@ -43,8 +45,19 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
 
+// Enums are serialized as "HELD", "CONFIRMED", ... to match the API contract.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper)));
+
+// Hold duration from the HOLD_DURATION_SECONDS env var (default 600)
+var holdSeconds = builder.Configuration.GetValue<int?>(HoldSettings.DurationEnvVar) ?? HoldSettings.DefaultDurationSeconds;
+if (holdSeconds <= 0)
+    throw new InvalidOperationException($"{HoldSettings.DurationEnvVar} must be a positive number of seconds.");
+builder.Services.AddSingleton(new HoldSettings(TimeSpan.FromSeconds(holdSeconds)));
+
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<IHoldService, HoldService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<IClassService>();
 
@@ -83,6 +96,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).WithTags("Health");
 app.MapClassEndpoints();
+app.MapHoldEndpoints();
 
 // Automatically apply pending database migrations on startup
 using (var scope = app.Services.CreateScope())

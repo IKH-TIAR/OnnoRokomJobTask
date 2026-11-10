@@ -22,6 +22,58 @@ namespace SchoolAdmission.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("SchoolAdmission.Domain.Entities.Hold", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("class_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasMaxLength(17)
+                        .HasColumnType("character(17)")
+                        .HasColumnName("student_id")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_holds");
+
+                    b.HasIndex("StudentId")
+                        .HasDatabaseName("ix_holds_student_id");
+
+                    b.HasIndex("ClassId", "Status")
+                        .HasDatabaseName("ix_holds_class_id_status");
+
+                    b.HasIndex("ClassId", "StudentId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_holds_active_student_per_class")
+                        .HasFilter("status IN ('Held', 'Confirmed')");
+
+                    b.ToTable("holds", (string)null);
+                });
+
             modelBuilder.Entity("SchoolAdmission.Domain.Entities.SchoolClass", b =>
                 {
                     b.Property<Guid>("Id")
@@ -49,6 +101,16 @@ namespace SchoolAdmission.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_classes_total_seats_positive", "total_seats > 0");
                         });
+                });
+
+            modelBuilder.Entity("SchoolAdmission.Domain.Entities.Hold", b =>
+                {
+                    b.HasOne("SchoolAdmission.Domain.Entities.SchoolClass", null)
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_holds_classes_class_id");
                 });
 #pragma warning restore 612, 618
         }

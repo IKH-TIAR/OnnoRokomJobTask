@@ -7,6 +7,7 @@ namespace SchoolAdmission.Infrastructure.Persistence;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<SchoolClass> Classes => Set<SchoolClass>();
+    public DbSet<Hold> Holds => Set<Hold>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

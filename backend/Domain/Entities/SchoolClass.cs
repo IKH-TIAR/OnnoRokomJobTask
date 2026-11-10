@@ -38,4 +38,17 @@ public class SchoolClass
             CreatedAt = now
         };
     }
+
+    /// <summary>
+    /// Reserve a seat for a student. The caller must pass the number of seats currently
+    /// occupied (active holds + confirmed) and must hold a lock on this class so the
+    /// count cannot change before the new hold is saved.
+    /// </summary>
+    public Hold PlaceHold(string studentId, int occupiedSeats, DateTimeOffset now, TimeSpan duration)
+    {
+        if (occupiedSeats >= TotalSeats)
+            throw new DomainConflictException("CLASS_FULL", "Sorry, all seats in this class are taken.");
+
+        return Hold.Create(Id, studentId, now, duration);
+    }
 }
