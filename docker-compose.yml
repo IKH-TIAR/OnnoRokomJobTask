@@ -1,4 +1,5 @@
 # Start everything:          docker compose up --build
+#   Frontend: http://localhost:3000    Backend API: http://localhost:8080
 # Run the backend tests:     docker compose run --rm backend-tests
 # Bonus (2nd backend :8081): docker compose --profile multi up --build
 
@@ -39,6 +40,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      # Used by the browser, so it must be reachable from the user's machine.
+      API_BASE_URL: "${API_BASE_URL:-http://localhost:8080}"
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
     restart: unless-stopped
 
   # Bonus: a second backend process on another port sharing the same database.
