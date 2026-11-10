@@ -58,4 +58,51 @@ public class Hold
     /// </summary>
     public HoldStatus GetEffectiveStatus(DateTimeOffset now)
         => Status == HoldStatus.Held && now >= ExpiresAt ? HoldStatus.Expired : Status;
+
+    public void EnsureOwnedBy(string studentId)
+    {
+        if (StudentId != studentId)
+            throw new DomainForbiddenException("HOLD_NOT_OWNED", "This application belongs to a different student.");
+    }
+
+    /// <summary>
+    /// Admission fee paid. Idempotent: confirming an already confirmed hold changes nothing,
+    /// so the seat is counted only once.
+    /// </summary>
+    public void Confirm(DateTimeOffset now)
+    {
+        switch (GetEffectiveStatus(now))
+        {
+            case HoldStatus.Confirmed:
+                return;
+            case HoldStatus.Held:
+                Status = HoldStatus.Confirmed;
+                UpdatedAt = now;
+                return;
+            case HoldStatus.Expired:
+                throw new DomainConflictException("HOLD_EXPIRED",
+                    "This application has expired. The seat was released; please apply again if seats are available.");
+            case HoldStatus.Cancelled:
+                throw new DomainConflictException("HOLD_CANCELLED", "This application was cancelled and cannot be confirmed.");
+        }
+    }
+
+    /// <summary>Withdraw the application and release the seat. Idempotent for an already cancelled hold.</summary>
+    public void Cancel(DateTimeOffset now)
+    {
+        switch (GetEffectiveStatus(now))
+        {
+            case HoldStatus.Cancelled:
+                return;
+            case HoldStatus.Held:
+                Status = HoldStatus.Cancelled;
+                UpdatedAt = now;
+                return;
+            case HoldStatus.Expired:
+                throw new DomainConflictException("HOLD_EXPIRED", "This application has already expired; the seat was released.");
+            case HoldStatus.Confirmed:
+                throw new DomainConflictException("HOLD_ALREADY_CONFIRMED",
+                    "Admission is already confirmed (fee paid) and cannot be cancelled here.");
+        }
+    }
 }

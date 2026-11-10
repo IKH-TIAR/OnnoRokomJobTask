@@ -13,5 +13,15 @@ public static class HoldEndpoints
         var group = app.MapGroup("/holds").WithTags("Holds");
 
         group.MapGet("/{holdId:guid}", HoldHandlers.GetHoldById);
+
+        group.MapPost("/{holdId:guid}/confirm", HoldHandlers.ConfirmHold)
+            .RequireStudentId();
+
+        group.MapDelete("/{holdId:guid}", HoldHandlers.CancelHold)
+            .RequireStudentId();
+
+        app.MapGet("/me/holds", HoldHandlers.GetMyHolds)
+            .RequireStudentId()
+            .WithTags("Holds");
     }
 }

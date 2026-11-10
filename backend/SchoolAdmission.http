@@ -30,3 +30,15 @@ POST {{baseUrl}}/classes/00000000-0000-0000-0000-000000000000/holds
 
 ### Get a hold (replace the hold id) - status becomes EXPIRED once expiresAt passes
 GET {{baseUrl}}/holds/00000000-0000-0000-0000-000000000000
+
+### Pay admission fee (replace the hold id) - 200 CONFIRMED; repeat is safe
+POST {{baseUrl}}/holds/00000000-0000-0000-0000-000000000000/confirm
+X-Student-Id: 20152691234567890
+
+### Cancel application (replace the hold id) - 204
+DELETE {{baseUrl}}/holds/00000000-0000-0000-0000-000000000000
+X-Student-Id: 20152691234567890
+
+### All applications of this student, newest first
+GET {{baseUrl}}/me/holds
+X-Student-Id: 20152691234567890

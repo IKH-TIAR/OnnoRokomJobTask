@@ -4,10 +4,10 @@ using SchoolAdmission.Endpoints.Filters;
 
 namespace SchoolAdmission.Endpoints;
 
+// studentId parameters are validated by StudentIdFilter (.RequireStudentId()). They are nullable
+// so a missing header reaches the filter (friendly message) instead of failing model binding.
 public static class HoldHandlers
 {
-    // studentId is validated by StudentIdFilter; nullable so a missing header reaches the
-    // filter (which returns a friendly message) instead of failing model binding.
     public static async Task<IResult> CreateHold(
         Guid classId,
         [FromHeader(Name = StudentIdFilter.HeaderName)] string? studentId,
@@ -25,5 +25,34 @@ public static class HoldHandlers
     {
         var hold = await holdService.GetByIdAsync(holdId, ct);
         return Results.Ok(hold);
+    }
+
+    public static async Task<IResult> ConfirmHold(
+        Guid holdId,
+        [FromHeader(Name = StudentIdFilter.HeaderName)] string? studentId,
+        IHoldService holdService,
+        CancellationToken ct)
+    {
+        var hold = await holdService.ConfirmHoldAsync(holdId, studentId!.Trim(), ct);
+        return Results.Ok(hold);
+    }
+
+    public static async Task<IResult> CancelHold(
+        Guid holdId,
+        [FromHeader(Name = StudentIdFilter.HeaderName)] string? studentId,
+        IHoldService holdService,
+        CancellationToken ct)
+    {
+        await holdService.CancelHoldAsync(holdId, studentId!.Trim(), ct);
+        return Results.NoContent();
+    }
+
+    public static async Task<IResult> GetMyHolds(
+        [FromHeader(Name = StudentIdFilter.HeaderName)] string? studentId,
+        IHoldService holdService,
+        CancellationToken ct)
+    {
+        var holds = await holdService.GetStudentHoldsAsync(studentId!.Trim(), ct);
+        return Results.Ok(holds);
     }
 }

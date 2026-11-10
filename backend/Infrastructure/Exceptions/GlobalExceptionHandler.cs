@@ -21,6 +21,7 @@ public class GlobalExceptionHandler(
         {
             NotFoundException e => (StatusCodes.Status404NotFound, "Resource Not Found", e.Message, e.Code),
             DomainConflictException e => (StatusCodes.Status409Conflict, "Conflict", e.Message, e.Code),
+            DomainForbiddenException e => (StatusCodes.Status403Forbidden, "Forbidden", e.Message, e.Code),
             DomainException e => (StatusCodes.Status400BadRequest, "Bad Request", e.Message, e.Code),
             // Malformed JSON, wrong types, missing body, invalid header binding, etc.
             BadHttpRequestException => (StatusCodes.Status400BadRequest, "Bad Request",
