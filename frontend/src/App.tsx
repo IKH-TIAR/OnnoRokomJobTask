@@ -2,7 +2,8 @@ import { Link, Route, Routes } from 'react-router'
 import { Layout } from './components/Layout'
 import { AdminPage } from './pages/AdminPage'
 import { ClassesPage } from './pages/ClassesPage'
-import { ApplicationPage, MyApplicationsPage } from './pages/PlaceholderPages'
+import { ApplicationPage } from './pages/ApplicationPage'
+import { MyApplicationsPage } from './pages/MyApplicationsPage'
 
 export default function App() {
   return (
