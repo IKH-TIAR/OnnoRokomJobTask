@@ -9,6 +9,10 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
+# ---------- test: run the frontend tests (docker compose run --rm frontend-tests) ----------
+FROM build AS test
+CMD ["npm", "test"]
+
 # ---------- final: nginx serves the static files ----------
 FROM nginx:1.29-alpine AS final
 

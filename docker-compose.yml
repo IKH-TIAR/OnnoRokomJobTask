@@ -1,6 +1,7 @@
 # Start everything:          docker compose up --build
 #   Frontend: http://localhost:3000    Backend API: http://localhost:8080
 # Run the backend tests:     docker compose run --rm backend-tests
+# Run the frontend tests:    docker compose run --rm frontend-tests
 # Bonus (2nd backend :8081): docker compose --profile multi up --build
 
 x-backend-env: &backend-env
@@ -45,6 +46,7 @@ services:
   frontend:
     build:
       context: ./frontend
+      target: final
     environment:
       # Used by the browser, so it must be reachable from the user's machine.
       API_BASE_URL: "${API_BASE_URL:-http://localhost:8080}"
@@ -70,6 +72,12 @@ services:
       backend:
         condition: service_started
     restart: unless-stopped
+
+  frontend-tests:
+    profiles: ["test"]
+    build:
+      context: ./frontend
+      target: test
 
   backend-tests:
     profiles: ["test"]

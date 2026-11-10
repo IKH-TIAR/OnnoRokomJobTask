@@ -20,7 +20,7 @@ I treated the AI as a fast pair programmer, not as the decision-maker:
 | Requirement analysis | Summarised the brief and listed edge cases and ambiguities; I decided the assumptions. |
 | Backend code | Generated most of the code within the structure and conventions I specified; I reviewed it step by step. |
 | Concurrency design | Discussed options; we used a database row lock on the class, and the AI pointed out a race between confirm and expiry that the same lock closes. |
-| Tests | Wrote the integration tests (real PostgreSQL via Testcontainers) for the scenarios we defined. |
+| Tests | Wrote the backend integration tests (real PostgreSQL via Testcontainers) and the frontend tests (Vitest + React Testing Library) for the scenarios we defined. |
 | Docker / Compose | Wrote the Dockerfiles and compose setup. |
 | Frontend | Generated the React screens; I tested the flows in the browser. |
 | Docs | Drafted `ASSUMPTIONS.md` and this file; I edited them. |
@@ -41,6 +41,9 @@ I treated the AI as a fast pair programmer, not as the decision-maker:
 ## Making sure the tests themselves were trustworthy
 
 A test suite that passes on the first run proves little. After all 35 backend tests passed, I had the database lock removed on purpose and re-ran the concurrency tests: **42 students got seats in a 10-seat class** and 3 tests failed. With the lock restored they pass again. That showed the tests really detect overbooking.
+
+I did the same with the frontend tests: with the rule that turns a timed-out application into `EXPIRED` switched
+off, the two tests covering it failed. With the rule restored, all 40 pass.
 
 ## Takeaway
 

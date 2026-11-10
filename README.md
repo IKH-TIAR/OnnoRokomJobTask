@@ -53,6 +53,25 @@ The tests run the real API against a real PostgreSQL database. They cover:
   confirm only by the owner and only before expiry, idempotent confirm, cancel, re-applying after expiry.
 * **API contract:** status codes, field names and status values exactly as specified; validation errors.
 
+### Frontend tests (bonus: 40 tests)
+
+```bash
+docker compose run --rm --build frontend-tests
+```
+
+Or locally with Node.js 22+:
+
+```bash
+cd frontend
+npm install
+npm test
+```
+
+Vitest + React Testing Library, with the API mocked. They cover the countdown and the rule that shows an
+application as `EXPIRED` the moment time runs out (no reload), paying and cancelling (with the "are you sure?"
+prompt), the other-student case, the student id input and that it is remembered after a refresh, Apply being
+disabled for full classes, and plain-language messages for errors and for an unreachable server.
+
 ## Bonus: two backend processes on one database
 
 ```bash
@@ -125,8 +144,9 @@ frontend/                     React + TypeScript + Vite + TanStack Query + Tailw
   src/api/                    API client, typed errors, React Query hooks
   src/pages/                  Classes, Admin, Application, My applications
   src/components/             Layout, student id bar, countdown, status badge, …
+  src/**/*.test.ts(x)         Vitest + React Testing Library tests
   Dockerfile, nginx.conf      static build served by nginx; config.js generated from API_BASE_URL
-docker-compose.yml            postgres + backend + frontend (+ backend-tests, backend-2 profiles)
+docker-compose.yml            postgres + backend + frontend (+ backend-tests, frontend-tests, backend-2 profiles)
 ASSUMPTIONS.md                decisions where the brief was not explicit
 AI_USAGE.md                   how AI was used, and where it was wrong
 ```
